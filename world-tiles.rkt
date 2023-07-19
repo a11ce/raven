@@ -5,7 +5,7 @@
 
 (provide (struct-out world-tile) grass-floor stone-wall)
 
-(struct world-tile (tileimg walkable) #:transparent)
+(struct world-tile (tileimg walkable?) #:transparent)
 
 (define grass-floor (world-tile
                      (char/color->tileimg "." (color 50 100 50)

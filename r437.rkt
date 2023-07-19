@@ -13,28 +13,31 @@
 (define tileimg-size 16)
 
 (struct object (pos tileimg))
+(struct level (dims tiles))
+(struct state (level player))
 
-(struct state (floor player))
-
-(define (make-blank-floor width height)
-  (for/list ([h height])
-    (for/list ([w width])
-      grass-floor)))
+(define (make-default-level width height)
+  (level (vec2 width height)
+         (for/list ([h height])
+           (for/list ([w width])
+             (if (and (= h 4) (not (= w 2)))
+                 stone-wall
+                 grass-floor)))))
 
 (define (init)
-  (state (make-blank-floor WIDTH HEIGHT)
+  (state (make-default-level WIDTH HEIGHT)
          (object (vec2 0 0)
                  (char/color->tileimg "@" (color 161 28 224)
                                       (color 27 27 27)))))
 
-(define (render tiles player)
+(define (render level player)
   (define floor (overlay/align
                  "left" "top"
                  (apply above
                         (map (λ (row)
                                (apply beside
                                       (map render-world-tile row)))
-                             tiles))
+                             (level-tiles level)))
                  (rectangle (* WIDTH tileimg-size)
                             (* HEIGHT tileimg-size)
                             'solid 'black)))
@@ -52,27 +55,33 @@
    (* -1 x tileimg-size)
    (* -1 y tileimg-size) floor))
 
-(define (move-player w dir)
-  (struct-copy state w
-               [player
-                (struct-copy object (state-player w)
-                             [pos (vec2+
-                                   dir
-                                   (object-pos (state-player w)))])]))
+(define (movable-location? w pos)
+  (define tile (list2-ref (level-tiles (state-level w)) pos))
+  (and tile
+       (world-tile-walkable? tile)))
+
+(define (try-move-player w dir)
+  (define new-pos (vec2+ dir (object-pos (state-player w))))
+  (if (movable-location? w new-pos)
+      (struct-copy state w
+                   [player
+                    (struct-copy object (state-player w)
+                                 [pos new-pos])])
+      w))
 
 (define (handle-key state key)
   (cond
     [(key=? key "left")
-     (move-player state (vec2 -1 0))]
+     (try-move-player state (vec2 -1 0))]
     [(key=? key "right")
-     (move-player state (vec2 1 0))]
+     (try-move-player state (vec2 1 0))]
     [(key=? key "up")
-     (move-player state (vec2 0 -1))]
+     (try-move-player state (vec2 0 -1))]
     [(key=? key "down")
-     (move-player state (vec2 0 1))]
+     (try-move-player state (vec2 0 1))]
     [else state]))
 
 (big-bang (init)
-  (to-draw (λ (s) (render (state-floor s)
+  (to-draw (λ (s) (render (state-level s)
                           (state-player s))))
   (on-key (λ (s k) (handle-key s k))))

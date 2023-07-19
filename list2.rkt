@@ -8,8 +8,11 @@
 (define/dispatch (list2-ref [list2 list?]
                             [x number?]
                             [y number?])
-  (list-ref
-   (list-ref list2 y) x))
+  (if (and (< -1 y (length list2))
+           (< -1 x (length (car list2))))
+      (list-ref
+       (list-ref list2 y) x)
+      #f))
 
 
 (define/dispatch (list2-ref [list2 list?]
