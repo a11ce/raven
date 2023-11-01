@@ -1,6 +1,7 @@
 #lang racket/base
 
-(provide list2-ref)
+(provide list2-ref
+         map/2d)
 
 (require dispatch
          "vec2.rkt")
@@ -22,3 +23,7 @@
 (define/dispatch (list2-ref [list2 list?]
                             [pos list?])
   (list2-ref list2 (car pos) (cadr pos)))
+
+(define (map/2d f lst)
+  (map (λ (l) (map f l))
+       lst))

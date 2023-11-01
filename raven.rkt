@@ -4,47 +4,25 @@
          racket/match
          "util.rkt"
          "font.rkt"
-         "world-tiles.rkt")
-
-(define WIDTH 20)
-(define HEIGHT 10)
-
+         "render.rkt"
+         "level.rkt" ; remove!
+         "world-tile.rkt" ; remove!
+         (prefix-in game: "test-data.rkt"))
 
 (define tileimg-size 16)
 
 (struct object (pos tileimg))
-(struct level (dims tiles))
 (struct state (level player))
 
-(define (make-default-level width height)
-  (level (vec2 width height)
-         (for/list ([h height])
-           (for/list ([w width])
-             (if (and (= h 4) (not (= w 2)))
-                 stone-wall
-                 grass-floor)))))
-
 (define (init)
-  (state (make-default-level WIDTH HEIGHT)
-         (object (vec2 0 0)
+  (state game:courtyard
+         (object (vec2 1 1)
                  (char/color->tileimg "@" (color 161 28 224)
                                       (color 27 27 27)))))
 
 (define (render level player)
-  (define floor (overlay/align
-                 "left" "top"
-                 (apply above
-                        (map (λ (row)
-                               (apply beside
-                                      (map render-world-tile row)))
-                             (level-tiles level)))
-                 (rectangle (* WIDTH tileimg-size)
-                            (* HEIGHT tileimg-size)
-                            'solid 'black)))
+  (define floor (render-level level))
   (scale 2 (draw-object floor player)))
-
-(define (render-world-tile tile)
-  (world-tile-tileimg tile))
 
 (define (draw-object floor object)
   (define xy (object-pos object))
